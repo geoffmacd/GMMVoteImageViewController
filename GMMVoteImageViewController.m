@@ -48,6 +48,15 @@
     [super updateInterfaceWithImage:image];
     
     if (image) {
+        
+        if(!self.upArrow){
+            self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
+            self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
+            self.upArrow.alpha = 0;
+            self.downArrow.alpha = 0;
+            self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
+        }
+        
         //ok to add in arrows
         [self.blackBackdrop addSubview:self.upArrow];
         [self.blackBackdrop addSubview:self.downArrow];
@@ -58,17 +67,22 @@
         }];
     }
     
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self dismissImageWithFlick:CGPointMake(0, -600)];
+    });
+    
 }
 
 -(void)_viewDidLoadForImageMode{
     
+    
     [super _viewDidLoadForImageMode];
+    
     
     self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
     self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
     self.upArrow.alpha = 0;
     self.downArrow.alpha = 0;
-    
     self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
 }
 
