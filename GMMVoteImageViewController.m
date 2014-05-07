@@ -184,7 +184,7 @@
     if(fabsf(velocity.y)> self.minVerticalVelocityForVote){
         
         //qualifies as flick
-        if(dirUp)
+        if(!dirUp)
             self.voteResult = GMMVoteDownVote;
         else
             self.voteResult = GMMVoteUpVote;
