@@ -79,6 +79,8 @@
     self.upArrow.alpha = 0;
     self.downArrow.alpha = 0;
     self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
+    
+    self.dismissalDelegate = self;
 }
 
 - (void)dismissingPanGestureRecognizerPanned:(UIPanGestureRecognizer *)panner {
@@ -176,29 +178,48 @@
     [self.downArrow removeFromSuperview];
     [self.arrowAnimator removeAllBehaviors];
     
-    //add 10 arrows in direction of flick
-    NSMutableArray * arrowArray = [NSMutableArray new];
-    CGRect targetFrame = self.downArrow.frame;
-    targetFrame.size = CGSizeMake(20, 30);
     BOOL dirUp = (velocity.y < 0 ? YES : NO);
     
-    for(NSInteger i = 0; i < 20; i++){
+    if(fabsf(velocity.y)> 1000){
         
-        CGRect arrowFrame = targetFrame;
-        arrowFrame.origin.x = arrowFrame.origin.x - 180 + ((float)rand() / RAND_MAX) * 360;
-        arrowFrame.origin.y = arrowFrame.origin.y - ((float)rand() / RAND_MAX) * 200;
-        GMMArrowView * arrow = [[GMMArrowView alloc] initWithFrame:arrowFrame withDirectionUp:dirUp];
-        [self.blackBackdrop addSubview:arrow];
-        [arrowArray addObject:arrow];
+        //qualifies as flick
+        if(dirUp)
+            self.voteResult = GMMVoteDownVote;
+        else
+            self.voteResult = GMMVoteUpVote;
+        
+        //add 10 arrows in direction of flick
+        NSMutableArray * arrowArray = [NSMutableArray new];
+        CGRect targetFrame = self.downArrow.frame;
+        targetFrame.size = CGSizeMake(20, 30);
+        BOOL dirUp = (velocity.y < 0 ? YES : NO);
+        
+        for(NSInteger i = 0; i < 20; i++){
+            
+            CGRect arrowFrame = targetFrame;
+            arrowFrame.origin.x = arrowFrame.origin.x - 180 + ((float)rand() / RAND_MAX) * 360;
+            arrowFrame.origin.y = arrowFrame.origin.y - ((float)rand() / RAND_MAX) * 200;
+            GMMArrowView * arrow = [[GMMArrowView alloc] initWithFrame:arrowFrame withDirectionUp:dirUp];
+            [self.blackBackdrop addSubview:arrow];
+            [arrowArray addObject:arrow];
+        }
+        self.celebratoryArrows = [NSArray arrayWithArray:arrowArray];
+        UIPushBehavior * arrowPush = [[UIPushBehavior alloc] initWithItems:self.celebratoryArrows mode:UIPushBehaviorModeContinuous];
+        [arrowPush setPushDirection:CGVectorMake(0, velocity.y*0.2)];
+        UIDynamicItemBehavior *modifier = [[UIDynamicItemBehavior alloc] initWithItems:arrowArray];
+        [modifier setAngularResistance:15];
+        [modifier setDensity:[self appropriateDensityForView:[arrowArray firstObject]]];
+        [self.arrowAnimator addBehavior:modifier];
+        [self.arrowAnimator addBehavior:arrowPush];
     }
-    self.celebratoryArrows = [NSArray arrayWithArray:arrowArray];
-    UIPushBehavior * arrowPush = [[UIPushBehavior alloc] initWithItems:self.celebratoryArrows mode:UIPushBehaviorModeContinuous];
-    [arrowPush setPushDirection:CGVectorMake(0, velocity.y*0.2)];
-    UIDynamicItemBehavior *modifier = [[UIDynamicItemBehavior alloc] initWithItems:arrowArray];
-    [modifier setAngularResistance:15];
-    [modifier setDensity:[self appropriateDensityForView:[arrowArray firstObject]]];
-    [self.arrowAnimator addBehavior:modifier];
-    [self.arrowAnimator addBehavior:arrowPush];
+}
+
+#pragma mark - JTSImageViewControllerDismissalDelegate
+
+-(void)imageViewerDidDismiss:(JTSImageViewController *)imageViewer{
+    
+    if([self.voteDelegate conformsToProtocol:@protocol(GMMVoteImageViewDelegate)])
+        [self.voteDelegate imageViewerDidDismiss:self withVote:self.voteResult];
 }
 
 @end

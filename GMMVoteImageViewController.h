@@ -8,6 +8,22 @@
 
 #import "JTSImageViewController.h"
 
-@interface GMMVoteImageViewController : JTSImageViewController
+typedef NS_ENUM(NSInteger, GMMVoteType) {
+    GMMVoteDownVote = - 1,
+    GMMVoteNoVote,
+    GMMVoteUpVote
+};
+
+
+@protocol GMMVoteImageViewDelegate <NSObject>
+
+- (void)imageViewerDidDismiss:(JTSImageViewController *)imageViewer withVote:(GMMVoteType)vote;
+
+@end
+
+@interface GMMVoteImageViewController : JTSImageViewController <JTSImageViewControllerDismissalDelegate>
+
+@property (weak) id<GMMVoteImageViewDelegate> voteDelegate;
+@property GMMVoteType voteResult;
 
 @end
