@@ -25,5 +25,6 @@ typedef NS_ENUM(NSInteger, GMMVoteType) {
 
 @property (weak) id<GMMVoteImageViewDelegate> voteDelegate;
 @property GMMVoteType voteResult;
+@property CGFloat minVerticalVelocityForVote;
 
 @end

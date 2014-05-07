@@ -70,10 +70,8 @@
 
 -(void)_viewDidLoadForImageMode{
     
-    
     [super _viewDidLoadForImageMode];
-    
-    
+
     self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
     self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
     self.upArrow.alpha = 0;
@@ -180,7 +178,10 @@
     
     BOOL dirUp = (velocity.y < 0 ? YES : NO);
     
-    if(fabsf(velocity.y)> 1000){
+    if(!self.minVerticalVelocityForVote)
+        self.minVerticalVelocityForVote = 1000.0f;
+    
+    if(fabsf(velocity.y)> self.minVerticalVelocityForVote){
         
         //qualifies as flick
         if(dirUp)
