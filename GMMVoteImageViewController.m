@@ -17,6 +17,7 @@
 @property (strong, nonatomic) UIScrollView *scrollView;
 @property (assign, nonatomic) BOOL scrollViewIsAnimatingAZoom;
 @property (assign, nonatomic) BOOL isAnimatingAPresentationOrDismissal;
+@property (assign, nonatomic) BOOL imageIsFlickingAwayForDismissal;
 @property (assign, nonatomic) BOOL isDraggingImage;
 
 - (void)dismissImageWithFlick:(CGPoint)velocity;
@@ -27,6 +28,7 @@
 - (void)startImageDragging:(CGPoint)panGestureLocationInView translationOffset:(UIOffset)translationOffset;
 - (void)cancelCurrentImageDrag:(BOOL)animated;
 - (void)updateDimmingViewForCurrentZoomScale:(BOOL)animated;
+- (void)imageDoubleTapped:(UITapGestureRecognizer *)sender;
 
 @end
 
@@ -49,17 +51,16 @@
     
     if (image) {
         
-        if(!self.upArrow){
-            self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
-            self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
-            self.upArrow.alpha = 0;
-            self.downArrow.alpha = 0;
-            self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
-        }
+        self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
+        self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
+        self.upArrow.alpha = 0;
+        self.downArrow.alpha = 0;
+        self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
         
         //ok to add in arrows
         [self.blackBackdrop addSubview:self.upArrow];
         [self.blackBackdrop addSubview:self.downArrow];
+        
         [UIView animateWithDuration:0.3f animations:^{
             
             [self.upArrow setAlpha:1];
@@ -70,15 +71,21 @@
 
 -(void)_viewDidLoadForImageMode{
     
-    [super _viewDidLoadForImageMode];
-
-    self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
-    self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
-    self.upArrow.alpha = 0;
-    self.downArrow.alpha = 0;
-    self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
-    
     self.dismissalDelegate = self;
+    [super _viewDidLoadForImageMode];
+    
+    if (!self.image) {
+        
+        self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
+        self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
+        self.upArrow.alpha = 0;
+        self.downArrow.alpha = 0;
+        self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
+        
+        //ok to add in arrows
+        [self.blackBackdrop addSubview:self.upArrow];
+        [self.blackBackdrop addSubview:self.downArrow];
+    }
 }
 
 - (void)dismissingPanGestureRecognizerPanned:(UIPanGestureRecognizer *)panner {
@@ -95,10 +102,34 @@
         }
     }
 }
+- (void)imageDoubleTapped:(UITapGestureRecognizer *)sender {
+    
+    if (self.scrollViewIsAnimatingAZoom) {
+        return;
+    }
+    
+    [super imageDoubleTapped:sender];
+    
+    if (self.scrollView.zoomScale == 1.0f) {
+        //remove arrows
+        
+        [self.upArrow setHidden:YES];
+        [self.downArrow setHidden:YES];
+        
+    } else {
+        
+        [self.upArrow setHidden:NO];
+        [self.downArrow setHidden:NO];
+    }
+}
 
 - (void)updateDimmingViewForCurrentZoomScale:(BOOL)animated {
     
     [super updateDimmingViewForCurrentZoomScale:animated];
+    
+    if (self.imageIsFlickingAwayForDismissal) {
+        return;
+    }
     
     BOOL isDimmed = !(self.scrollView.zoomScale > 1);
     //need to show or hide the arrows since the user cannot flick anyway
@@ -179,9 +210,9 @@
     BOOL dirUp = (velocity.y < 0 ? YES : NO);
     
     if(!self.minVerticalVelocityForVote)
-        self.minVerticalVelocityForVote = 1000.0f;
+        self.minVerticalVelocityForVote = 800.0f;
     
-    if(fabsf(velocity.y)> self.minVerticalVelocityForVote){
+    if(fabsf(velocity.y)> self.minVerticalVelocityForVote && fabsf(velocity.y) > fabsf(velocity.x)){
         
         //qualifies as flick
         if(!dirUp)
