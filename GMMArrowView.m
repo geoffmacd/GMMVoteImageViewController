@@ -10,6 +10,18 @@
 
 #define kArrowPointCount 7
 
+@interface UIBezierPath (dqd_arrowhead)
+
+//from http://stackoverflow.com/questions/13528898/how-can-i-draw-an-arrow-using-core-graphics
+
++ (UIBezierPath *)dqd_bezierPathWithArrowFromPoint:(CGPoint)startPoint
+                                           toPoint:(CGPoint)endPoint
+                                         tailWidth:(CGFloat)tailWidth
+                                         headWidth:(CGFloat)headWidth
+                                        headLength:(CGFloat)headLength;
+
+@end
+
 @implementation UIBezierPath (dqd_arrowhead)
 
 
@@ -18,6 +30,8 @@
                                          tailWidth:(CGFloat)tailWidth
                                          headWidth:(CGFloat)headWidth
                                         headLength:(CGFloat)headLength {
+    //define the arrow with the dimensions
+    
     CGFloat length = hypotf(endPoint.x - startPoint.x, endPoint.y - startPoint.y);
     
     CGPoint points[kArrowPointCount];
@@ -45,6 +59,7 @@
                             tailWidth:(CGFloat)tailWidth
                             headWidth:(CGFloat)headWidth
                            headLength:(CGFloat)headLength {
+    //composes path by making the 7 points that make up an arrow
     CGFloat tailLength = length - headLength;
     points[0] = CGPointMake(0, tailWidth / 2);
     points[1] = CGPointMake(tailLength, tailWidth / 2);
@@ -58,6 +73,7 @@
 + (CGAffineTransform)dqd_transformForStartPoint:(CGPoint)startPoint
                                        endPoint:(CGPoint)endPoint
                                          length:(CGFloat)length {
+    //transforms the arrow to align to dimensions
     CGFloat cosine = (endPoint.x - startPoint.x) / length;
     CGFloat sine = (endPoint.y - startPoint.y) / length;
     return (CGAffineTransform){ cosine, sine, -sine, cosine, startPoint.x, startPoint.y };
@@ -75,56 +91,19 @@
         self.facingUp = facingUp;
         
         if(facingUp)
-            self.fillColor = [self colorWithHexString:@"85bf25"];
+            self.fillColor = [UIColor colorWithRed:133/255.0f green:191/255.0f blue:37/255.0f alpha:1];
         else
-            self.fillColor = [self colorWithHexString:@"ee4444"];
+            self.fillColor = [UIColor colorWithRed:238/255.0f green:68/255.0f blue:68/255.0f alpha:1];
     }
     return self;
 }
-                            
--(UIColor*)colorWithHexString:(NSString*)hex
-{
-    NSString *cString = [[hex stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
-    
-    // String should be 6 or 8 characters
-    if ([cString length] < 6) return [UIColor grayColor];
-    
-    // strip 0X if it appears
-    if ([cString hasPrefix:@"0X"]) cString = [cString substringFromIndex:2];
-    
-    if ([cString length] != 6) return  [UIColor grayColor];
-    
-    // Separate into r, g, b substrings
-    NSRange range;
-    range.location = 0;
-    range.length = 2;
-    NSString *rString = [cString substringWithRange:range];
-    
-    range.location = 2;
-    NSString *gString = [cString substringWithRange:range];
-    
-    range.location = 4;
-    NSString *bString = [cString substringWithRange:range];
-    
-    // Scan values
-    unsigned int r, g, b;
-    [[NSScanner scannerWithString:rString] scanHexInt:&r];
-    [[NSScanner scannerWithString:gString] scanHexInt:&g];
-    [[NSScanner scannerWithString:bString] scanHexInt:&b];  
-    
-    return [UIColor colorWithRed:((float) r / 255.0f)  
-                           green:((float) g / 255.0f)  
-                            blue:((float) b / 255.0f)  
-                           alpha:1.0f];  
-}
-                              
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect
-{
+
+
+- (void)drawRect:(CGRect)rect{
     
     CGPoint top,bottom;
     
+    //flip arrow to the right direction
     if(!_facingUp){
         bottom = CGPointMake(rect.size.width/2, rect.size.height);
         top = CGPointMake(rect.size.width/2, 0);
@@ -133,17 +112,13 @@
         bottom = CGPointMake(rect.size.width/2, 0);
     }
     
-    // Drawing code
+    // path from above
     UIBezierPath *aPath = [UIBezierPath dqd_bezierPathWithArrowFromPoint:top toPoint:bottom tailWidth:rect.size.height/10 headWidth:rect.size.width/2 headLength:rect.size.height/2];
     
     // Set the render colors.
     [self.fillColor setFill];
-    
-    // Adjust the drawing options as needed.
     aPath.lineWidth = rect.size.height/5;
-    
-    // Fill the path before stroking it so that the fill
-    // color does not obscure the stroked line.
+    //paint
     [aPath fill];
 }
 

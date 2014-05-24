@@ -20,6 +20,8 @@
 @property (assign, nonatomic) BOOL imageIsFlickingAwayForDismissal;
 @property (assign, nonatomic) BOOL isDraggingImage;
 
+//necessary methods to override to hack behaviour
+
 - (void)dismissImageWithFlick:(CGPoint)velocity;
 - (void)dismissingPanGestureRecognizerPanned:(UIPanGestureRecognizer *)panner;
 - (void)_viewDidLoadForImageMode;
@@ -38,12 +40,28 @@
 @property GMMArrowView * downArrow;
 //collection of arrows displayed upon up or down vote
 @property NSArray * celebratoryArrows;
+//the animator for the arrows
 @property (strong, nonatomic) UIDynamicAnimator *arrowAnimator;
+//the behaviour that rotates the views as the image is moved
 @property (strong, nonatomic) UIDynamicBehavior  *arrowBehaviour;
 
 @end
 
 @implementation GMMVoteImageViewController
+
+-(void)addArrowsToBackdrop{
+    
+    //setup the arrows on the view
+    self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
+    self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
+    self.upArrow.alpha = 0;
+    self.downArrow.alpha = 0;
+    self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
+    
+    //ok to add in arrows to backdrop
+    [self.blackBackdrop addSubview:self.upArrow];
+    [self.blackBackdrop addSubview:self.downArrow];
+}
 
 -(void)updateInterfaceWithImage:(UIImage *)image{
     
@@ -51,16 +69,9 @@
     
     if (image) {
         
-        self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
-        self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
-        self.upArrow.alpha = 0;
-        self.downArrow.alpha = 0;
-        self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
+        [self addArrowsToBackdrop];
         
-        //ok to add in arrows
-        [self.blackBackdrop addSubview:self.upArrow];
-        [self.blackBackdrop addSubview:self.downArrow];
-        
+        //fade in
         [UIView animateWithDuration:0.3f animations:^{
             
             [self.upArrow setAlpha:1];
@@ -76,15 +87,7 @@
     
     if (!self.image) {
         
-        self.upArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop] withDirectionUp:YES];
-        self.downArrow = [[GMMArrowView alloc] initWithFrame:[self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop] withDirectionUp:NO];
-        self.upArrow.alpha = 0;
-        self.downArrow.alpha = 0;
-        self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
-        
-        //ok to add in arrows
-        [self.blackBackdrop addSubview:self.upArrow];
-        [self.blackBackdrop addSubview:self.downArrow];
+        [self addArrowsToBackdrop];
     }
 }
 
@@ -154,6 +157,7 @@
 #pragma mark - Dynamic Image Dragging
 
 - (void)startImageDragging:(CGPoint)panGestureLocationInView translationOffset:(UIOffset)translationOffset {
+    //gesture action called when user starts dragging
     
     [super startImageDragging:panGestureLocationInView translationOffset:translationOffset];
     
@@ -194,6 +198,7 @@
     
     [super cancelCurrentImageDrag:animated];
     
+    //remove transform to identity so arrows right themselves
     [self.arrowAnimator removeAllBehaviors];
     self.upArrow.transform  = CGAffineTransformIdentity;
     self.downArrow.transform  = CGAffineTransformIdentity;
@@ -220,7 +225,7 @@
         else
             self.voteResult = GMMVoteUpVote;
         
-        //add 10 arrows in direction of flick
+        //add 20 random arrows in direction of flick
         NSMutableArray * arrowArray = [NSMutableArray new];
         CGRect targetFrame = self.downArrow.frame;
         targetFrame.size = CGSizeMake(20, 30);
@@ -250,7 +255,9 @@
 
 -(void)imageViewerDidDismiss:(JTSImageViewController *)imageViewer{
     
-    if([self.voteDelegate conformsToProtocol:@protocol(GMMVoteImageViewDelegate)])
+    //inform delegate of result
+    
+    if(self.voteDelegate && [self.voteDelegate conformsToProtocol:@protocol(GMMVoteImageViewDelegate)])
         [self.voteDelegate imageViewerDidDismiss:self withVote:self.voteResult];
 }
 
