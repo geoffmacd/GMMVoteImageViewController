@@ -59,6 +59,9 @@
     self.arrowAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self.blackBackdrop];
     
     //ok to add in arrows to backdrop
+    [self.blackBackdrop setAutoresizesSubviews:YES];
+    [self.upArrow setAutoresizingMask:UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin];
+    [self.downArrow setAutoresizingMask:UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin];
     [self.blackBackdrop addSubview:self.upArrow];
     [self.blackBackdrop addSubview:self.downArrow];
 }
