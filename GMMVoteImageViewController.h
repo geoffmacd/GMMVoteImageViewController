@@ -14,6 +14,21 @@ typedef NS_ENUM(NSInteger, GMMVoteType) {
     GMMVoteUpVote
 };
 
+typedef struct {
+    BOOL isAnimatingAPresentationOrDismissal;
+    BOOL isDismissing;
+    BOOL isTransitioningFromInitialModalToInteractiveState;
+    BOOL viewHasAppeared;
+    BOOL isRotating;
+    BOOL isPresented;
+    BOOL rotationTransformIsDirty;
+    BOOL imageIsFlickingAwayForDismissal;
+    BOOL isDraggingImage;
+    BOOL scrollViewIsAnimatingAZoom;
+    BOOL imageIsBeingReadFromDisk;
+    BOOL isManuallyResizingTheScrollViewFrame;
+    BOOL imageDownloadFailed;
+} JTSImageViewControllerFlags;
 
 @protocol GMMVoteImageViewDelegate <NSObject>
 

@@ -12,13 +12,13 @@
 
 @interface JTSImageViewController ()
 
+//views
 @property (strong, nonatomic) UIView *blackBackdrop;
 @property (strong, nonatomic) UIImageView *imageView;
 @property (strong, nonatomic) UIScrollView *scrollView;
-@property (assign, nonatomic) BOOL scrollViewIsAnimatingAZoom;
-@property (assign, nonatomic) BOOL isAnimatingAPresentationOrDismissal;
-@property (assign, nonatomic) BOOL imageIsFlickingAwayForDismissal;
-@property (assign, nonatomic) BOOL isDraggingImage;
+
+//flags
+@property (assign, nonatomic) JTSImageViewControllerFlags flags;
 
 //necessary methods to override to hack behaviour
 
@@ -33,6 +33,8 @@
 - (void)imageDoubleTapped:(UITapGestureRecognizer *)sender;
 
 @end
+
+
 
 @interface GMMVoteImageViewController ()
 
@@ -98,19 +100,19 @@
     
     [super dismissingPanGestureRecognizerPanned:panner];
     
-    if (self.scrollViewIsAnimatingAZoom || self.isAnimatingAPresentationOrDismissal) {
+    if (self.flags.scrollViewIsAnimatingAZoom || self.flags.isAnimatingAPresentationOrDismissal) {
         return;
     }
     
     if (panner.state == UIGestureRecognizerStateChanged) {
-        if (self.isDraggingImage) {
+        if (self.flags.isDraggingImage) {
             self.arrowBehaviour.action();
         }
     }
 }
 - (void)imageDoubleTapped:(UITapGestureRecognizer *)sender {
     
-    if (self.scrollViewIsAnimatingAZoom) {
+    if (self.flags.scrollViewIsAnimatingAZoom) {
         return;
     }
     
@@ -133,7 +135,7 @@
     
     [super updateDimmingViewForCurrentZoomScale:animated];
     
-    if (self.imageIsFlickingAwayForDismissal) {
+    if (self.flags.imageIsFlickingAwayForDismissal) {
         return;
     }
     
