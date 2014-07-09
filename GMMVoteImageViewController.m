@@ -22,6 +22,7 @@
 
 //necessary methods to override to hack behaviour
 
+- (void)updateLayoutsForCurrentOrientation;
 - (void)dismissImageWithFlick:(CGPoint)velocity;
 - (void)dismissingPanGestureRecognizerPanned:(UIPanGestureRecognizer *)panner;
 - (void)_viewDidLoadForImageMode;
@@ -66,6 +67,16 @@
     [self.downArrow setAutoresizingMask:UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin];
     [self.blackBackdrop addSubview:self.upArrow];
     [self.blackBackdrop addSubview:self.downArrow];
+}
+
+- (void)updateLayoutsForCurrentOrientation {
+    
+    [super updateLayoutsForCurrentOrientation];
+    
+    self.blackBackdrop.frame = CGRectInset(self.view.bounds, -512, -512);
+    
+    self.upArrow.frame = [self.view convertRect:CGRectMake(self.view.center.x-12, 3, 25, 40) toView:self.blackBackdrop];
+    self.downArrow.frame = [self.view convertRect:CGRectMake(self.view.center.x-12, self.view.bounds.size.height - 43, 25, 40) toView:self.blackBackdrop];
 }
 
 -(void)updateInterfaceWithImage:(UIImage *)image{
